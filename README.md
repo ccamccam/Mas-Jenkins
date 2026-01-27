@@ -1,2 +1,2 @@
-# Mas-Jenkins
-For my assignment
+# We-Outchea
+First GitHub repository
