@@ -18,7 +18,7 @@ pipeline {
     stage('Static Analysis (SonarQube)') {
       steps {
         withSonarQubeEnv('SQ') {
-          sh 'mvn -B sonar:sonar -Dsonar.projectKey=mas-jenkins -Dsonar.host.url=http://localhost:9000 -Dsonar.login=$SONAR_TOKEN'
+          sh 'mvn -B sonar:sonar -Dsonar.projectKey=mas-jenkins'
         }
       }
     }
