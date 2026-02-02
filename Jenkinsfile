@@ -17,7 +17,7 @@ pipeline {
 
     stage('Static Analysis (SonarQube)') {
       steps {
-        withSonarQubeEnv('sonarqube') {
+        withSonarQubeEnv('SQ') {
           sh '''
             mvn -B sonar:sonar \
               -Dsonar.projectKey=mas-jenkins \
