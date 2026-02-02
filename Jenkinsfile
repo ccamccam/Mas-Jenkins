@@ -2,8 +2,11 @@ pipeline {
   agent any
 
   stages {
+
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        checkout scm
+      }
     }
 
     stage('Build + Test + Coverage + Jar') {
@@ -12,40 +15,47 @@ pipeline {
       }
     }
 
-    // --- Static Analysis (SonarQube) ---
-    // If you set up SonarQube in Jenkins global config:
-    // stage('Static Analysis (SonarQube)') {
-    //   steps {
-    //     withSonarQubeEnv('sonarqube') {
-    //       sh 'mvn -B sonar:sonar'
-    //     }
-    //   }
-    // }
+    stage('Static Analysis (SonarQube)') {
+      steps {
+        withSonarQubeEnv('sonarqube') {
+          sh '''
+            mvn -B sonar:sonar \
+              -Dsonar.projectKey=mas-jenkins \
+              -Dsonar.host.url=http://localhost:9000 \
+              -Dsonar.login=$SONAR_TOKEN
+          '''
+        }
+      }
+    }
   }
 
   post {
+
     always {
-      // Test results
+      // Publish JUnit test results
       junit 'target/surefire-reports/*.xml'
 
-      // Keep artifacts + reports
+      // Archive JAR artifact
       archiveArtifacts artifacts: 'target/*.jar', allowEmptyArchive: false
+
+      // Archive JaCoCo coverage report
       archiveArtifacts artifacts: 'target/site/jacoco/**', allowEmptyArchive: true
     }
 
     success {
-      echo 'Build SUCCESS'
-      // Optional email notification (requires SMTP configured in Jenkins):
-      // mail to: 'you@example.com',
-      //      subject: "Jenkins SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-      //      body: "Build succeeded: ${env.BUILD_URL}"
+      emailext(
+        to: 'chris@local.test',
+        subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+        body: "Build succeeded.\n\n${env.BUILD_URL}"
+      )
     }
 
     failure {
-      echo 'Build FAILURE'
-      // mail to: 'you@example.com',
-      //      subject: "Jenkins FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-      //      body: "Build failed: ${env.BUILD_URL}"
+      emailext(
+        to: 'chris@local.test',
+        subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+        body: "Build failed.\n\n${env.BUILD_URL}"
+      )
     }
   }
 }
